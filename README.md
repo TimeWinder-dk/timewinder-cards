@@ -47,6 +47,32 @@ max_incidents: 10
 > If your entity ids differ (check **Developer Tools → States** for `sensor.timewinder...`),
 > set them explicitly in the config above.
 
+## Ready-made dashboard
+
+[`dashboards/timewinder.yaml`](dashboards/timewinder.yaml) is a full YAML-mode dashboard with four
+views — **Overblik**, **Teams**, **Analytics**, **Varegård & Bar** — built on the `timewinder_ops`
+sensors and this card.
+
+Deploy it:
+
+1. Copy `dashboards/timewinder.yaml` to your HA `config/dashboards/timewinder.yaml`.
+2. Register it in `configuration.yaml`:
+
+   ```yaml
+   lovelace:
+     mode: storage
+     dashboards:
+       timewinder-drift:
+         mode: yaml
+         title: TimeWinder
+         icon: mdi:clipboard-pulse
+         show_in_sidebar: true
+         filename: dashboards/timewinder.yaml
+   ```
+3. Restart Home Assistant — the **TimeWinder** dashboard appears in the sidebar.
+
+> Adjust the entity ids in the file if yours differ (check **Developer Tools → States**).
+
 ## License
 
 MIT

@@ -1,0 +1,131 @@
+# TimeWinder drift dashboard (Home Assistant, YAML mode).
+#
+# Deploy: copy this file to <config>/dashboards/timewinder.yaml and register it in
+# configuration.yaml:
+#
+#   lovelace:
+#     mode: storage
+#     dashboards:
+#       timewinder-drift:
+#         mode: yaml
+#         title: TimeWinder
+#         icon: mdi:clipboard-pulse
+#         show_in_sidebar: true
+#         filename: dashboards/timewinder.yaml
+#
+# Requires the timewinder_ops integration (sensors) and, for the Overblik view,
+# the TimeWinder Drift card from this repo.
+#
+# NOTE: the v0.2.0 sensors currently get a doubled `timewinder_` prefix from HA's
+# auto-naming. The entity ids below match that. If you rename the entities, update them here.
+title: TimeWinder
+views:
+  # ──────────────────────────────────────────────────────────────────────────
+  - title: Overblik
+    path: overblik
+    icon: mdi:clipboard-pulse
+    cards:
+      - type: custom:timewinder-card
+        title: Drift lige nu
+
+      - type: glance
+        title: Nøgletal
+        columns: 3
+        entities:
+          - entity: sensor.timewinder_operations_hub_nye_sager
+            name: Nye sager
+          - entity: sensor.timewinder_timewinder_operations_hub_svartid_ack
+            name: Svartid
+          - entity: sensor.timewinder_timewinder_operations_hub_brug_for_hjaelp
+            name: Brug for hjælp
+          - entity: sensor.timewinder_operations_hub_abne_eskaleringer
+            name: Eskaleringer
+          - entity: sensor.timewinder_timewinder_operations_hub_team_load
+            name: Teams
+          - entity: sensor.timewinder_timewinder_operations_hub_top_punkter
+            name: Top-punkter
+
+      - type: markdown
+        title: Top-punkter (mest aktive)
+        content: |
+          {% set pts = state_attr('sensor.timewinder_timewinder_operations_hub_top_punkter','points') or [] %}
+          {% if pts | count == 0 %}Ingen aktive punkter.{% endif %}
+          {% for p in pts -%}
+          - **{{ p.name }}**{% if p.area %} ({{ p.area }}){% endif %} — {{ p.openIncidents }} åbne, {{ p.reportCount }} meldinger
+          {% endfor %}
+
+  # ──────────────────────────────────────────────────────────────────────────
+  - title: Teams
+    path: teams
+    icon: mdi:account-group
+    cards:
+      - type: markdown
+        title: Team-load
+        content: |
+          {% set teams = state_attr('sensor.timewinder_timewinder_operations_hub_team_load','teams') or [] %}
+          {% if teams | count == 0 %}Ingen team-data (kræver koordinator-rolle).{% endif %}
+          {% for t in teams -%}
+          - **{{ t.teamName }}** — {{ t.open }} åbne · {{ t.unassigned }} ikke tildelt · {{ t.criticalHigh }} kritisk/høj
+          {% endfor %}
+
+      - type: markdown
+        title: Tilgængelighed pr. team
+        content: |
+          {% set teams = state_attr('sensor.timewinder_timewinder_operations_hub_brug_for_hjaelp','teams') or [] %}
+          {% if teams | count == 0 %}Ingen data.{% endif %}
+          {% for t in teams -%}
+          - **{{ t.teamName }}** — 🟢 {{ t.counts.Available }} · 🟠 {{ t.counts.Busy }} · ⏸️ {{ t.counts.Break }} · 🆘 {{ t.counts.NeedHelp }}
+          {% endfor %}
+
+  # ──────────────────────────────────────────────────────────────────────────
+  - title: Analytics
+    path: analytics
+    icon: mdi:chart-line
+    cards:
+      - type: glance
+        title: Brug
+        entities:
+          - entity: sensor.timewinder_operations_hub_brugere_online
+            name: Online nu
+          - entity: sensor.timewinder_timewinder_operations_hub_sessioner
+            name: Sessioner
+
+      - type: history-graph
+        title: Online & sessioner (24t)
+        hours_to_show: 24
+        entities:
+          - sensor.timewinder_operations_hub_brugere_online
+          - sensor.timewinder_timewinder_operations_hub_sessioner
+
+      - type: markdown
+        title: Periode-totaler
+        content: |
+          {% set e = 'sensor.timewinder_timewinder_operations_hub_sessioner' %}
+          - Periode: **{{ state_attr(e,'days') }}** dage
+          - Sessioner: **{{ states(e) }}**
+          - Brugere (peak/dag): **{{ state_attr(e,'users') }}**
+          - Sidevisninger: **{{ state_attr(e,'pageViews') }}**
+          - Hændelser: **{{ state_attr(e,'events') }}**
+
+  # ──────────────────────────────────────────────────────────────────────────
+  - title: Varegård & Bar
+    path: varegaard-bar
+    icon: mdi:glass-mug-variant
+    cards:
+      - type: markdown
+        title: Levering (leveret vs. solgt)
+        content: |
+          {% set rows = state_attr('sensor.timewinder_timewinder_operations_hub_levering','rows') or [] %}
+          {% if rows | count == 0 %}Ingen leverings-data (kræver Varegård/Sekretariat-adgang).{% endif %}
+          {% for r in rows[:40] -%}
+          - **{{ r.barName }} · {{ r.productName }}** — leveret {{ r.deliveredUnits }} {{ r.unit }}, solgt {{ r.soldUnits }}, rest {{ r.remainingUnits }}
+          {% endfor %}
+
+      - type: markdown
+        title: Bar-ordrer
+        content: |
+          {% set items = state_attr('sensor.timewinder_timewinder_operations_hub_bar_ordrer','items') or [] %}
+          {% if items | count == 0 %}Ingen åbne bar-ordrer.{% endif %}
+          {% for o in items -%}
+          - **{{ o.barName }}** — {{ o.status }} · {{ o.lineCount }} varelinjer{% if o.comment %} · {{ o.comment }}{% endif %}
+          {% endfor %}
