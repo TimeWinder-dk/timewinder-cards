@@ -17,15 +17,15 @@
  *   max_incidents: 10
  */
 
-const VERSION = "0.1.0";
+const VERSION = "0.1.1";
 
 const DEFAULTS = {
   title: "TimeWinder Drift",
-  open_entity: "sensor.timewinder_operations_hub_abne_sager",
-  escalations_entity: "sensor.timewinder_operations_hub_abne_eskaleringer",
-  sms_entity: "sensor.timewinder_operations_hub_sms_fejlet",
-  online_entity: "sensor.timewinder_operations_hub_brugere_online",
-  incidents_entity: "sensor.timewinder_operations_hub_sagsliste",
+  open_entity: "sensor.timewinder_operations_hub_open_total",
+  escalations_entity: "sensor.timewinder_operations_hub_open_followups",
+  sms_entity: "sensor.timewinder_operations_hub_sms_failed",
+  online_entity: "sensor.timewinder_operations_hub_users_online",
+  incidents_entity: "sensor.timewinder_operations_hub_incidents",
   max_incidents: 10,
 };
 
