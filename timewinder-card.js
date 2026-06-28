@@ -9,15 +9,16 @@
  * Full config (defaults shown — only override what differs):
  *   type: custom:timewinder-card
  *   title: TimeWinder Drift
- *   open_entity: sensor.timewinder_operations_hub_abne_sager
- *   escalations_entity: sensor.timewinder_operations_hub_abne_eskaleringer
- *   sms_entity: sensor.timewinder_operations_hub_sms_fejlet
- *   online_entity: sensor.timewinder_operations_hub_brugere_online
- *   incidents_entity: sensor.timewinder_operations_hub_sagsliste
+ *   open_entity: sensor.timewinder_operations_hub_open_total
+ *   escalations_entity: sensor.timewinder_operations_hub_open_followups
+ *   sms_entity: sensor.timewinder_operations_hub_sms_failed
+ *   online_entity: sensor.timewinder_operations_hub_users_online
+ *   incidents_entity: sensor.timewinder_operations_hub_incidents
+ *   app_url: https://drift.timewinder.dk
  *   max_incidents: 10
  */
 
-const VERSION = "0.1.1";
+const VERSION = "0.1.2";
 
 const DEFAULTS = {
   title: "TimeWinder Drift",
@@ -26,6 +27,7 @@ const DEFAULTS = {
   sms_entity: "sensor.timewinder_operations_hub_sms_failed",
   online_entity: "sensor.timewinder_operations_hub_users_online",
   incidents_entity: "sensor.timewinder_operations_hub_incidents",
+  app_url: "https://drift.timewinder.dk",
   max_incidents: 10,
 };
 
@@ -34,6 +36,9 @@ const escHtml = (s) =>
     /[&<>"']/g,
     (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m])
   );
+
+const taskUrl = (baseUrl, id) =>
+  `${String(baseUrl || "").replace(/\/+$/, "")}/task/${encodeURIComponent(String(id))}`;
 
 class TimeWinderCard extends HTMLElement {
   static getStubConfig() {
@@ -80,9 +85,13 @@ class TimeWinderCard extends HTMLElement {
     const rows =
       items
         .slice(0, c.max_incidents)
-        .map(
-          (i) => `
-          <div class="row">
+        .map((i) => {
+          const tag = i.id ? "a" : "div";
+          const href = i.id
+            ? ` href="${escHtml(taskUrl(c.app_url, i.id))}" target="_blank" rel="noreferrer"`
+            : "";
+          return `
+          <${tag} class="row"${href}>
             <span class="prio prio-${escHtml((i.priority || "").toLowerCase())}"></span>
             <div class="rcol">
               <div class="rtitle">${escHtml(i.title || "(uden titel)")}</div>
@@ -91,8 +100,8 @@ class TimeWinderCard extends HTMLElement {
           }${i.assignedToDisplayName ? " → " + escHtml(i.assignedToDisplayName) : ""}</div>
             </div>
             <span class="status">${escHtml(i.status || "")}</span>
-          </div>`
-        )
+          </${tag}>`;
+        })
         .join("") || `<div class="empty">Ingen åbne sager 🎉</div>`;
 
     const kpi = (value, label, cls) =>
@@ -111,7 +120,8 @@ class TimeWinderCard extends HTMLElement {
         .kpi.alert .v { color: var(--error-color, #f44336); }
         .kpi.warn .v { color: var(--warning-color, #ff9800); }
         .list { display: flex; flex-direction: column; }
-        .row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--divider-color); }
+        .row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--divider-color); color: inherit; text-decoration: none; }
+        a.row:hover .rtitle { text-decoration: underline; }
         .rcol { flex: 1; min-width: 0; }
         .rtitle { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .rmeta { font-size: 0.78rem; color: var(--secondary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

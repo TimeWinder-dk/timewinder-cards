@@ -36,16 +36,20 @@ Full configuration (override only what differs):
 ```yaml
 type: custom:timewinder-card
 title: TimeWinder Drift
-open_entity: sensor.timewinder_operations_hub_abne_sager
-escalations_entity: sensor.timewinder_operations_hub_abne_eskaleringer
-sms_entity: sensor.timewinder_operations_hub_sms_fejlet
-online_entity: sensor.timewinder_operations_hub_brugere_online
-incidents_entity: sensor.timewinder_operations_hub_sagsliste
+open_entity: sensor.timewinder_operations_hub_open_total
+escalations_entity: sensor.timewinder_operations_hub_open_followups
+sms_entity: sensor.timewinder_operations_hub_sms_failed
+online_entity: sensor.timewinder_operations_hub_users_online
+incidents_entity: sensor.timewinder_operations_hub_incidents
+app_url: https://drift.timewinder.dk
 max_incidents: 10
 ```
 
 > If your entity ids differ (check **Developer Tools → States** for `sensor.timewinder...`),
 > set them explicitly in the config above.
+
+Incident rows link to `app_url` + `/task/<id>` so coordinators can open a case directly
+from Home Assistant.
 
 ## Ready-made dashboard
 

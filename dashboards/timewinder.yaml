@@ -13,7 +13,7 @@
 #         show_in_sidebar: true
 #         filename: dashboards/timewinder.yaml
 #
-# Requires the timewinder_ops integration (>= v0.2.2, which sets stable entity ids) and,
+# Requires the timewinder_ops integration (>= v0.2.3, which exposes browser response time) and,
 # for the Overblik view, the TimeWinder Drift card from this repo.
 title: TimeWinder
 views:
@@ -24,6 +24,7 @@ views:
     cards:
       - type: custom:timewinder-card
         title: Drift lige nu
+        app_url: https://drift.timewinder.dk
 
       - type: glance
         title: Nøgletal
